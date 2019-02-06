@@ -6,7 +6,8 @@ module.exports = () => {
   return Sox({
     global: {
       'no-dither': true,
-      guard: true
+      guard: true,
+      norm: true
     },
     output: {
       bits: 16,
