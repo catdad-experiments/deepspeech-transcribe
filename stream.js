@@ -18,7 +18,12 @@ const Wav = require('node-wav');
 const encode = require('./stream-encode.js');
 const recognize = require('./stream-recognize.js');
 
-deepspeech.printVersions();
+
+if (process.argv.includes('-v') || process.argv.includes('--version')) {
+  deepspeech.printVersions();
+  console.log(`${require('./package.json').name}: v${require('./package.json').version}`);
+  process.exit(0);
+}
 
 const argv = require('yargs')
   .option('model', {
@@ -43,7 +48,7 @@ const argv = require('yargs')
     demandOption: true,
     description: 'Path to the audio file to run (WAV format)'
   })
-  .version(`${require('./package.json').name}: v${require('./package.json').version}`)
+  .version(false)
   .help('h')
   .argv;
 
