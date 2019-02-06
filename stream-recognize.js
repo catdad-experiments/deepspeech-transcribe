@@ -11,10 +11,8 @@ const createLogger = (log) => {
 
 // Beam width used in the CTC decoder when building candidate transcriptions
 const BEAM_WIDTH = 500;
-
 // The alpha hyperparameter of the CTC decoder. Language Model weight
 const LM_ALPHA = 0.75;
-
 // The beta hyperparameter of the CTC decoder. Word insertion bonus.
 const LM_BETA = 1.85;
 
@@ -24,7 +22,6 @@ const LM_BETA = 1.85;
 
 // Number of MFCC features to use
 const N_FEATURES = 26;
-
 // Size of the context window used for producing timesteps in the input vector
 const N_CONTEXT = 9;
 
