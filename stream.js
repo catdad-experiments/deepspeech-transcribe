@@ -11,35 +11,13 @@
 
 const fs = require('fs');
 const util = require('util');
-const Duplex = require('stream').Duplex;
 
 const argparse = require('argparse');
 const deepspeech = require('deepspeech');
-const MemoryStream = require('memory-stream');
 const Wav = require('node-wav');
 
 const encode = require('./stream-encode.js');
-
-// These constants control the beam search decoder
-
-// Beam width used in the CTC decoder when building candidate transcriptions
-const BEAM_WIDTH = 500;
-
-// The alpha hyperparameter of the CTC decoder. Language Model weight
-const LM_ALPHA = 0.75;
-
-// The beta hyperparameter of the CTC decoder. Word insertion bonus.
-const LM_BETA = 1.85;
-
-// These constants are tied to the shape of the graph used (changing them changes
-// the geometry of the first layer), so make sure you use the same constants that
-// were used during training
-
-// Number of MFCC features to use
-const N_FEATURES = 26;
-
-// Size of the context window used for producing timesteps in the input vector
-const N_CONTEXT = 9;
+const recognize = require('./stream-recognize.js');
 
 var VersionAction = function VersionAction(options) {
   options = options || {};
@@ -62,10 +40,6 @@ parser.addArgument(['--audio'], {required: true, help: 'Path to the audio file t
 parser.addArgument(['--version'], {action: VersionAction, help: 'Print version and exits'});
 var args = parser.parseArgs();
 
-function totalTime(hrtimeValue) {
-  return (hrtimeValue[0] + hrtimeValue[1] / 1000000000).toPrecision(4);
-}
-
 function getSampleRate() {
   const buffer = fs.readFileSync(args.audio);
   const result = Wav.decode(buffer);
@@ -82,58 +56,20 @@ if (sampleRate < 16000) {
   console.error('Warning: original sample rate (' + sampleRate + ') is lower than 16kHz. Up-sampling might produce erratic speech recognition.');
 }
 
-function setupModel() {
-  const model = new deepspeech.Model(args.model, N_FEATURES, N_CONTEXT, args.alphabet, BEAM_WIDTH);
-
-  if (args.lm && args.trie) {
-    console.error('Loading language model from files %s %s', args.lm, args.trie);
-    const lm_load_start = process.hrtime();
-    model.enableDecoderWithLM(args.alphabet, args.lm, args.trie, LM_ALPHA, LM_BETA);
-    const lm_load_end = process.hrtime(lm_load_start);
-    console.error('Loaded language model in %ds.', totalTime(lm_load_end));
-  }
-
-  return model;
-}
-
-const model = setupModel();
-const sctx = model.setupStream(150, 16000);
 const projectedBytes = bytes * 16000 / sampleRate;
 let totalBytes = 0;
 let lastLog = Date.now();
 
 fs.createReadStream(args.audio)
   .pipe(encode())
-  .on('error', err => {
-    console.log('ERROR:', err);
-  })
+  .on('error', err => console.log(1, err))
+  .pipe(recognize(args, { log: true, projectedBytes }))
+  .on('error', err => console.log(2, err))
   .on('data', chunk => {
-    totalBytes += chunk.length;
-
-    if (Date.now() - lastLog > 1000 * 30) {
-      console.log(`${(new Date()).toISOString()} current total: ${totalBytes} of ${projectedBytes | 1}, ${(totalBytes / projectedBytes).toFixed(2)}%`);
-      lastLog = Date.now();
-    }
-
-    model.feedAudioContent(sctx, chunk.slice(0, chunk.length / 2));
+    console.log('------------------------------------------------');
+    console.log(chunk.toString());
+    console.log('------------------------------------------------');
   })
-  .on('finish', () => {
-    console.log('finish, total bytes', totalBytes);
-    const output = model.finishStream(sctx);
-
-    console.log('------------------------------------------------------');
-    console.log(output);
-  //  processSplit(model, audioBuffer.slice(0, audioBuffer.length / 2));
-    console.log('------------------------------------------------------');
+  .on('end', () => {
+    console.log('done');
   });
-
-
-function processSplit(model, buffer) {
-  const rate = 16000;
-  let copy = Buffer.concat([buffer]);
-
-  while (copy.length) {
-    console.log(model.stt(copy.slice(0, rate * 5), rate));
-    copy = copy.slice(rate * 5);
-  }
-}

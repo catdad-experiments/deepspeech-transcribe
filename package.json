@@ -12,9 +12,9 @@
   "dependencies": {
     "argparse": "1.0.x",
     "deepspeech": "^0.4.0",
-    "memory-stream": "0.0.3",
     "node-pre-gyp": "0.12.x",
     "node-wav": "0.0.2",
-    "sox-stream": "2.0.x"
+    "sox-stream": "2.0.x",
+    "through2": "^3.0.0"
   }
 }
