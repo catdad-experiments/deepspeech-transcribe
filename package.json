@@ -1,7 +1,7 @@
 {
   "name": "transcribe",
   "version": "1.0.0",
-  "description": "",
+  "description": "transcribe",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -16,5 +16,6 @@
     "node-wav": "0.0.2",
     "sox-stream": "2.0.x",
     "through2": "^3.0.0"
-  }
+  },
+  "devDependencies": {}
 }
