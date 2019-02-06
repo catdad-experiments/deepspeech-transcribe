@@ -34,7 +34,6 @@ module.exports = ({ model, alphabet, lm = null, trie = null }, { log = false, pr
   const dsModel = new deepspeech.Model(model, N_FEATURES, N_CONTEXT, alphabet, BEAM_WIDTH);
 
   if (lm && trie) {
-    logger('Loading language model from files %s %s', lm, trie);
     dsModel.enableDecoderWithLM(alphabet, lm, trie, LM_ALPHA, LM_BETA);
   }
 

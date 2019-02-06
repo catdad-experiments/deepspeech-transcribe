@@ -56,9 +56,6 @@ function getSampleRate() {
   const buffer = fs.readFileSync(argv.audio);
   const result = Wav.decode(buffer);
 
-  console.log('original total bytes:', buffer.length);
-  console.log('original sample rate:', result.sampleRate);
-
   return { sampleRate: result.sampleRate, bytes: buffer.length };
 }
 
