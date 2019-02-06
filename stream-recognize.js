@@ -54,6 +54,8 @@ module.exports = ({ model, alphabet, lm = null, trie = null }, { log = false, pr
 
     cb();
   }, function onEnd(cb) {
+    logger(`finished reading ${totalBytes} bytes of projected ${projectedBytes | 1} bytes`);
+
     const output = dsModel.finishStream(sctx);
 
     cb(null, output);
