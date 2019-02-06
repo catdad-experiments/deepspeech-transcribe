@@ -56,7 +56,8 @@ if (sampleRate < 16000) {
   console.error('Warning: original sample rate (' + sampleRate + ') is lower than 16kHz. Up-sampling might produce erratic speech recognition.');
 }
 
-const projectedBytes = bytes * 16000 / sampleRate;
+// why divided by 2?
+const projectedBytes = bytes * 16000 / sampleRate / 2;
 let totalBytes = 0;
 let lastLog = Date.now();
 
