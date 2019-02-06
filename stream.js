@@ -12,36 +12,43 @@
 const fs = require('fs');
 const util = require('util');
 
-const argparse = require('argparse');
 const deepspeech = require('deepspeech');
 const Wav = require('node-wav');
 
 const encode = require('./stream-encode.js');
 const recognize = require('./stream-recognize.js');
 
-var VersionAction = function VersionAction(options) {
-  options = options || {};
-  options.nargs = 0;
-  argparse.Action.call(this, options);
-};
-util.inherits(VersionAction, argparse.Action);
+deepspeech.printVersions();
 
-VersionAction.prototype.call = function(parser) {
-  deepspeech.printVersions();
-  process.exit(0);
-};
-
-var parser = new argparse.ArgumentParser({addHelp: true, description: 'Running DeepSpeech inference.'});
-parser.addArgument(['--model'], {required: true, help: 'Path to the model (protocol buffer binary file)'});
-parser.addArgument(['--alphabet'], {required: true, help: 'Path to the configuration file specifying the alphabet used by the network'});
-parser.addArgument(['--lm'], {help: 'Path to the language model binary file', nargs: '?'});
-parser.addArgument(['--trie'], {help: 'Path to the language model trie file created with native_client/generate_trie', nargs: '?'});
-parser.addArgument(['--audio'], {required: true, help: 'Path to the audio file to run (WAV format)'});
-parser.addArgument(['--version'], {action: VersionAction, help: 'Print version and exits'});
-var args = parser.parseArgs();
+const argv = require('yargs')
+  .option('model', {
+    demandOption: true,
+    description: 'Path to the model (protocol buffer binary file)',
+    type: 'string'
+  })
+  .option('alphabet', {
+    demandOption: true,
+    description: 'Path to the configuration file specifying the alphabet used by the network',
+    type: 'string'
+  })
+  .option('lm', {
+    description: 'Path to the language model binary file',
+    type: 'string'
+  })
+  .option('trie', {
+    description: 'Path to the language model trie file created with native_client/generate_trie',
+    type: 'string'
+  })
+  .option('audio', {
+    demandOption: true,
+    description: 'Path to the audio file to run (WAV format)'
+  })
+  .version(`${require('./package.json').name}: v${require('./package.json').version}`)
+  .help('h')
+  .argv;
 
 function getSampleRate() {
-  const buffer = fs.readFileSync(args.audio);
+  const buffer = fs.readFileSync(argv.audio);
   const result = Wav.decode(buffer);
 
   console.log('original total bytes:', buffer.length);
@@ -61,10 +68,10 @@ const projectedBytes = bytes * 16000 / sampleRate / 2;
 let totalBytes = 0;
 let lastLog = Date.now();
 
-fs.createReadStream(args.audio)
+fs.createReadStream(argv.audio)
   .pipe(encode())
   .on('error', err => console.log(1, err))
-  .pipe(recognize(args, { log: true, projectedBytes }))
+  .pipe(recognize(argv, { log: true, projectedBytes }))
   .on('error', err => console.log(2, err))
   .on('data', chunk => {
     console.log('------------------------------------------------');
