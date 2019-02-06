@@ -17,7 +17,8 @@ const argparse = require('argparse');
 const deepspeech = require('deepspeech');
 const MemoryStream = require('memory-stream');
 const Wav = require('node-wav');
-const Sox = require('sox-stream');
+
+const encode = require('./stream-encode.js');
 
 // These constants control the beam search decoder
 
@@ -102,21 +103,7 @@ let totalBytes = 0;
 let lastLog = Date.now();
 
 fs.createReadStream(args.audio)
-  .pipe(Sox({
-    global: {
-      'no-dither': true,
-      guard: true
-    },
-    output: {
-      bits: 16,
-      rate: 16000,
-      channels: 1,
-      encoding: 'signed-integer',
-      endian: 'little',
-      compression: 0.0,
-      type: 'raw'
-    }
-  }))
+  .pipe(encode())
   .on('error', err => {
     console.log('ERROR:', err);
   })
