@@ -70,6 +70,8 @@ const projectedBytes = bytes * 16000 / sampleRate / 2;
 let totalBytes = 0;
 let lastLog = Date.now();
 
+console.time('Done in');
+
 fs.createReadStream(argv.audio)
   .pipe(encode())
   .on('error', err => console.log(1, err))
@@ -81,5 +83,5 @@ fs.createReadStream(argv.audio)
     console.log('------------------------------------------------');
   })
   .on('end', () => {
-    console.log('done');
+    console.timeEnd('Done in');
   });
